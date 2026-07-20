@@ -4,10 +4,12 @@ from bot.utils.config import owner_only
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Available commands:\n\n"
-        "/start - Start the bot\n"
-        "/help - Show this help message"
-    )
+    "Available commands:\n\n"
+    "/start - Start the bot\n"
+    "/help - Show help\n"
+    "/add <date> <title> - Add reminder\n"
+    "/list - Show reminders"
+)
 
 
 help_handler = CommandHandler(
