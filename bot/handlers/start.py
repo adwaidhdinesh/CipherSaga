@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
-
+from bot.utils.config import owner_only
 from bot.database.database import add_user
 
 
@@ -20,4 +20,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-start_handler = CommandHandler("start", start)
+start_handler = CommandHandler(
+    "start",
+    start,
+    filters=owner_only
+)
