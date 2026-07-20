@@ -1,17 +1,17 @@
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
-from bot.database.database import get_reminders
+from bot.database.database import list_reminders as db_list_reminders
 from bot.utils.config import owner_only
 
 
-async def list_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    reminders = get_reminders(update.effective_user.id)
+    reminders = db_list_reminders(update.effective_user.id)
 
     if not reminders:
         await update.message.reply_text(
-            "No reminders."
+            "No reminders found."
         )
         return
 
@@ -19,9 +19,9 @@ async def list_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for reminder in reminders:
         message += (
-            f"{reminder[0]}. "
-            f"{reminder[1]} "
-            f"({reminder[2]})\n"
+            f"ID: {reminder['id']}\n"
+            f"Title: {reminder['title']}\n"
+            f"Time: {reminder['remind_at']}\n\n"
         )
 
     await update.message.reply_text(message)
@@ -29,6 +29,6 @@ async def list_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 list_handler = CommandHandler(
     "list",
-    list_reminders,
-    filters=owner_only,
+    list_command,
+    filters=owner_only
 )
