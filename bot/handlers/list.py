@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
@@ -10,18 +12,22 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reminders = db_list_reminders(update.effective_user.id)
 
     if not reminders:
-        await update.message.reply_text(
-            "No reminders found."
-        )
+        await update.message.reply_text("No reminders found.")
         return
 
-    message = "Your reminders:\n\n"
+    message = "📋 Your Reminders\n\n"
 
     for reminder in reminders:
+        dt = datetime.fromisoformat(reminder["remind_at"])
+
+        date = dt.strftime("%d %b %Y")
+        time = dt.strftime("%I:%M %p")
+
         message += (
-            f"ID: {reminder['id']}\n"
-            f"Title: {reminder['title']}\n"
-            f"Time: {reminder['remind_at']}\n\n"
+            f"🆔 {reminder['id']}\n"
+            f"📝 {reminder['title']}\n"
+            f"📅 {date}\n"
+            f"🕒 {time}\n\n"
         )
 
     await update.message.reply_text(message)
@@ -30,5 +36,5 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 list_handler = CommandHandler(
     "list",
     list_command,
-    filters=owner_only
+    filters=owner_only,
 )
