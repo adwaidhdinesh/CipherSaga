@@ -1,5 +1,5 @@
 import sqlite3
-
+from datetime import datetime, timedelta
 DATABASE = "data/ciphersaga.db"
 
 
@@ -69,15 +69,27 @@ def get_user(telegram_id):
     return user
 
 
-def add_reminder(telegram_id, title, remind_at):
+def add_reminder(
+    telegram_id,
+    title,
+    remind_at,
+    priority="Medium",
+    category="General",
+):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO reminders
-        (telegram_id, title, remind_at)
-        VALUES (?, ?, ?)
-    """, (telegram_id, title, remind_at))
+        (telegram_id,title,remind_at,priority,category)
+        VALUES(?,?,?,?,?)
+    """, (
+        telegram_id,
+        title,
+        remind_at,
+        priority,
+        category,
+    ))
 
     conn.commit()
 
@@ -86,7 +98,6 @@ def add_reminder(telegram_id, title, remind_at):
     conn.close()
 
     return reminder_id
-
 
 def list_reminders(telegram_id):
     conn = get_connection()
@@ -153,15 +164,166 @@ def delete_reminder(reminder_id):
 
 
 
-def update_reminder(reminder_id, title, remind_at):
+def update_reminder(
+    reminder_id,
+    title,
+    remind_at,
+    priority,
+    category,
+):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE reminders
-        SET title = ?, remind_at = ?
-        WHERE id = ?
-    """, (title, remind_at, reminder_id))
+        SET
+            title=?,
+            remind_at=?,
+            priority=?,
+            category=?
+        WHERE id=?
+    """, (
+        title,
+        remind_at,
+        priority,
+        category,
+        reminder_id,
+    ))
 
     conn.commit()
     conn.close()
+
+def get_tomorrow_reminders(telegram_id):
+    tomorrow = datetime.now().date() + timedelta(days=1)
+
+    return get_reminders_between(
+        telegram_id,
+        tomorrow,
+        tomorrow,
+    )
+
+
+def get_today_reminders(telegram_id):
+    today = datetime.now().date()
+
+    return get_reminders_between(
+        telegram_id,
+        today,
+        today,
+    )
+
+def get_week_reminders(telegram_id):
+    today = datetime.now().date()
+    week = today + timedelta(days=7)
+
+    return get_reminders_between(
+        telegram_id,
+        today,
+        week,
+    )
+
+def get_reminders_between(telegram_id, start_date, end_date):
+    reminders = list_reminders(telegram_id)
+
+    result = []
+
+    for reminder in reminders:
+        remind_at = datetime.fromisoformat(reminder["remind_at"])
+
+        if start_date <= remind_at.date() <= end_date:
+            result.append(reminder)
+
+    return result
+
+
+def search_reminders(telegram_id, keyword):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM reminders
+        WHERE telegram_id = ?
+        AND completed = 0
+        AND LOWER(title) LIKE LOWER(?)
+        ORDER BY remind_at
+    """, (telegram_id, f"%{keyword}%"))
+
+    reminders = cursor.fetchall()
+
+    conn.close()
+
+    return reminders
+
+
+def count_pending(telegram_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM reminders
+        WHERE telegram_id = ?
+        AND completed = 0
+    """, (telegram_id,))
+
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return count
+
+def count_completed(telegram_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM reminders
+        WHERE telegram_id = ?
+        AND completed = 1
+    """, (telegram_id,))
+
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return count
+
+
+def count_priority(telegram_id, priority):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM reminders
+        WHERE telegram_id = ?
+        AND completed = 0
+        AND priority = ?
+    """, (telegram_id, priority))
+
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return count
+
+
+def count_category(telegram_id, category):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM reminders
+        WHERE telegram_id = ?
+        AND completed = 0
+        AND category = ?
+    """, (telegram_id, category))
+
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return count

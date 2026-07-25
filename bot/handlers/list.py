@@ -18,17 +18,31 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = "📋 Your Reminders\n\n"
 
     for reminder in reminders:
+
+        priority_icon = {
+            "High": "🔴",
+            "Medium": "🟡",
+            "Low": "🟢",
+        }.get(reminder["priority"], "⚪")
+
         dt = datetime.fromisoformat(reminder["remind_at"])
 
         date = dt.strftime("%d %b %Y")
         time = dt.strftime("%I:%M %p")
 
         message += (
-            f"🆔 {reminder['id']}\n"
-            f"📝 {reminder['title']}\n"
-            f"📅 {date}\n"
-            f"🕒 {time}\n\n"
+            f"{priority_icon} {reminder['title']}\n"
+            f"🆔 ID: {reminder['id']}\n"
+            f"📂 Category: {reminder['category']}\n"
+            f"📌 Priority: {reminder['priority']}\n"
+            f"📋 Status: {reminder['status']}\n"
+            f"⏰ {date} • {time}\n"
         )
+
+        if reminder["description"]:
+            message += f"📝 {reminder['description']}\n"
+
+        message += "\n"
 
     await update.message.reply_text(message)
 
