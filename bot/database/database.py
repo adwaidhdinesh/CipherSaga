@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime, timedelta
+
 DATABASE = "data/ciphersaga.db"
 
 
@@ -30,9 +31,31 @@ def initialize_database():
             title TEXT NOT NULL,
             remind_at TEXT NOT NULL,
             completed INTEGER DEFAULT 0,
+            priority TEXT DEFAULT 'Medium',
+            category TEXT DEFAULT 'General',
+            status TEXT DEFAULT 'Pending',
+            description TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    existing_columns = {
+        row["name"]
+        for row in cursor.execute("PRAGMA table_info(reminders)")
+    }
+
+    migrations = [
+        ("priority", "TEXT DEFAULT 'Medium'"),
+        ("category", "TEXT DEFAULT 'General'"),
+        ("status", "TEXT DEFAULT 'Pending'"),
+        ("description", "TEXT DEFAULT ''"),
+    ]
+
+    for column, definition in migrations:
+        if column not in existing_columns:
+            cursor.execute(
+                f"ALTER TABLE reminders ADD COLUMN {column} {definition}"
+            )
 
     conn.commit()
     conn.close()
@@ -75,21 +98,16 @@ def add_reminder(
     remind_at,
     priority="Medium",
     category="General",
+    description="",
 ):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO reminders
-        (telegram_id,title,remind_at,priority,category)
-        VALUES(?,?,?,?,?)
-    """, (
-        telegram_id,
-        title,
-        remind_at,
-        priority,
-        category,
-    ))
+        (telegram_id, title, remind_at, priority, category, description)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (telegram_id, title, remind_at, priority, category, description))
 
     conn.commit()
 
@@ -98,6 +116,7 @@ def add_reminder(
     conn.close()
 
     return reminder_id
+
 
 def list_reminders(telegram_id):
     conn = get_connection()
@@ -136,13 +155,30 @@ def list_all_pending_reminders():
     return reminders
 
 
+def get_reminder(reminder_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM reminders
+        WHERE id = ?
+    """, (reminder_id,))
+
+    reminder = cursor.fetchone()
+
+    conn.close()
+
+    return reminder
+
+
 def complete_reminder(reminder_id):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE reminders
-        SET completed = 1
+        SET completed = 1, status = 'Completed'
         WHERE id = ?
     """, (reminder_id,))
 
@@ -166,32 +202,51 @@ def delete_reminder(reminder_id):
 
 def update_reminder(
     reminder_id,
-    title,
-    remind_at,
-    priority,
-    category,
+    title=None,
+    remind_at=None,
+    priority=None,
+    category=None,
+    description=None,
 ):
+    fields = []
+    values = []
+
+    if title is not None:
+        fields.append("title = ?")
+        values.append(title)
+
+    if remind_at is not None:
+        fields.append("remind_at = ?")
+        values.append(remind_at)
+
+    if priority is not None:
+        fields.append("priority = ?")
+        values.append(priority)
+
+    if category is not None:
+        fields.append("category = ?")
+        values.append(category)
+
+    if description is not None:
+        fields.append("description = ?")
+        values.append(description)
+
+    if not fields:
+        return
+
+    values.append(reminder_id)
+
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE reminders
-        SET
-            title=?,
-            remind_at=?,
-            priority=?,
-            category=?
-        WHERE id=?
-    """, (
-        title,
-        remind_at,
-        priority,
-        category,
-        reminder_id,
-    ))
+    cursor.execute(
+        f"UPDATE reminders SET {', '.join(fields)} WHERE id = ?",
+        values,
+    )
 
     conn.commit()
     conn.close()
+
 
 def get_tomorrow_reminders(telegram_id):
     tomorrow = datetime.now().date() + timedelta(days=1)
@@ -212,6 +267,7 @@ def get_today_reminders(telegram_id):
         today,
     )
 
+
 def get_week_reminders(telegram_id):
     today = datetime.now().date()
     week = today + timedelta(days=7)
@@ -221,6 +277,7 @@ def get_week_reminders(telegram_id):
         today,
         week,
     )
+
 
 def get_reminders_between(telegram_id, start_date, end_date):
     reminders = list_reminders(telegram_id)
@@ -254,76 +311,3 @@ def search_reminders(telegram_id, keyword):
     conn.close()
 
     return reminders
-
-
-def count_pending(telegram_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM reminders
-        WHERE telegram_id = ?
-        AND completed = 0
-    """, (telegram_id,))
-
-    count = cursor.fetchone()[0]
-
-    conn.close()
-
-    return count
-
-def count_completed(telegram_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM reminders
-        WHERE telegram_id = ?
-        AND completed = 1
-    """, (telegram_id,))
-
-    count = cursor.fetchone()[0]
-
-    conn.close()
-
-    return count
-
-
-def count_priority(telegram_id, priority):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM reminders
-        WHERE telegram_id = ?
-        AND completed = 0
-        AND priority = ?
-    """, (telegram_id, priority))
-
-    count = cursor.fetchone()[0]
-
-    conn.close()
-
-    return count
-
-
-def count_category(telegram_id, category):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM reminders
-        WHERE telegram_id = ?
-        AND completed = 0
-        AND category = ?
-    """, (telegram_id, category))
-
-    count = cursor.fetchone()[0]
-
-    conn.close()
-
-    return count

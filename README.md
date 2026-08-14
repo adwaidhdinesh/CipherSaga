@@ -137,7 +137,6 @@ python main.py
 | Command   | Description                |
 | --------- | -------------------------- |
 | `/start`  | Register and start the bot |
-| `/help`   | Show help                  |
 | `/add`    | Add a reminder             |
 | `/list`   | List reminders             |
 | `/edit`   | Edit a reminder            |

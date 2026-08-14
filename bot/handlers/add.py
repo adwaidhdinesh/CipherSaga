@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
@@ -39,6 +41,13 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "tomorrow 6pm\n"
             "today 8pm\n"
             "Friday 5pm"
+        )
+        return
+
+    if remind_at <= datetime.now():
+        await update.message.reply_text(
+            "❌ The reminder time is in the past.\n"
+            "Please choose a future time."
         )
         return
 

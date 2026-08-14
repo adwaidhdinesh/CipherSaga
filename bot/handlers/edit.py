@@ -3,7 +3,7 @@ from datetime import datetime
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
-from bot.database.database import update_reminder
+from bot.database.database import get_reminder, update_reminder
 from bot.services.reminder_service import (
     remove_scheduled_job,
     schedule_reminder,
@@ -36,6 +36,19 @@ async def edit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Invalid datetime.\n"
             "Example:\n"
             "/edit 3 DBMS Assignment 2026-07-30T18:00"
+        )
+        return
+
+    if remind_at <= datetime.now():
+        await update.message.reply_text(
+            "❌ The reminder time is in the past.\n"
+            "Please choose a future time."
+        )
+        return
+
+    if get_reminder(reminder_id) is None:
+        await update.message.reply_text(
+            f"❌ Reminder {reminder_id} not found."
         )
         return
 

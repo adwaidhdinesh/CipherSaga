@@ -18,3 +18,7 @@ if OWNER_ID is None:
 OWNER_ID = int(OWNER_ID)
 
 owner_only = filters.User(user_id=OWNER_ID)
+
+API_HOST = os.getenv("API_HOST", "0.0.0.0")
+API_PORT = int(os.getenv("API_PORT", "8000"))
+API_KEY = os.getenv("API_KEY", "")

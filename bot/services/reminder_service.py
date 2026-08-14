@@ -7,6 +7,7 @@ from bot.database.database import (
     list_all_pending_reminders,
     complete_reminder,
 )
+from bot.utils.logger import logger
 
 scheduler = AsyncIOScheduler()
 
@@ -48,9 +49,17 @@ def load_reminders(app):
 
     for reminder in reminders:
 
-        remind_time = datetime.fromisoformat(
-            reminder["remind_at"]
-        )
+        try:
+            remind_time = datetime.fromisoformat(
+                reminder["remind_at"]
+            )
+        except ValueError:
+            logger.warning(
+                "Skipping reminder %s: invalid remind_at %r",
+                reminder["id"],
+                reminder["remind_at"],
+            )
+            continue
 
         if remind_time > now:
 
