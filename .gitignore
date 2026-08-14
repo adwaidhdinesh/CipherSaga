@@ -5,3 +5,11 @@ __pycache__/
 data/*.db
 logs/
 *.log
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.DS_Store
