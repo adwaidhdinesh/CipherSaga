@@ -1,8 +1,23 @@
+<div align="center">
+
 # 🤖 CipherSaga
 
-CipherSaga is a personal Telegram assistant built with Python. It helps manage reminders, study schedules, and daily tasks while serving as a foundation for a future AI-powered personal assistant.
+**Personal Telegram Assistant**
+
+A Python-powered personal assistant bot for Telegram that manages reminders, study schedules, and daily tasks — with a FastAPI REST interface and SQLite persistence.
+
+`Python` · `python-telegram-bot` · `FastAPI` · `SQLite` · `APScheduler`
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-blue.svg)](https://www.python.org/downloads/)
+[![Telegram](https://img.shields.io/badge/Bot-Telegram-2CA5E0.svg)](https://core.telegram.org/bots)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+
+</div>
 
 ---
+
+# Features
 
 # Features
 
@@ -226,4 +241,4 @@ curl -X POST http://localhost:8000/reminders \
 
 # License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License — see [LICENSE](LICENSE).
